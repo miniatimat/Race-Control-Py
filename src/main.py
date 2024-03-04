@@ -1,9 +1,9 @@
-from typing import Final
 import os
 from dotenv import load_dotenv
 import discord
 from discord.ext import commands
 from discord import app_commands
+import functions
 
 load_dotenv()
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
@@ -20,13 +20,18 @@ async def on_ready():
     except Exception as e:
         print(e)
 
-@bot.tree.command (name="hello")
-async def hello(interaction: discord. Interaction):
-    await interaction.response.send_message(f"Hey {interaction.user.mention}! This is a slash command!", ephemeral=True)
 
-@bot.tree.command (name="say")
-@app_commands.describe (thing_to_say = "What should I say?")
-async def say (interaction: discord. Interaction, thing_to_say: str):
+@bot.tree.command(name="say")
+@app_commands.describe(thing_to_say="What should I say?")
+async def say(interaction: discord.Interaction, thing_to_say: str):
     await interaction.response.send_message(f" {interaction.user.name} said: {thing_to_say}")
+
+
+@bot.tree.command(name="rankpy", description="Displays someone's rank")
+@app_commands.describe(epic_name="Epic Display Name")
+async def say(interaction: discord.Interaction, epic_name: str):
+    response = await functions.get_rank(epic_name)
+    await interaction.response.send_message(f"{response}")
+
 
 bot.run(DISCORD_TOKEN)
