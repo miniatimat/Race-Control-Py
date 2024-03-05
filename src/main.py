@@ -1,3 +1,4 @@
+import asyncio
 import os
 from dotenv import load_dotenv
 import discord
@@ -25,8 +26,9 @@ async def say(interaction: discord.Interaction, thing_to_say: str):
 @bot.tree.command(name="rank", description="Displays someone's rank")
 @app_commands.describe(epic_name="Epic Display Name")
 async def say(interaction: discord.Interaction, epic_name: str):
+    await interaction.response.defer()
     response = await functions.get_rank(epic_name)
-    await interaction.response.send_message(f"{response}")
+    await interaction.followup.send(f"{response}")
 
 @bot.tree.command(name='sync', description='Owner only')
 async def sync(interaction: discord.Interaction):
