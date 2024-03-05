@@ -5,7 +5,7 @@ import requests
 load_dotenv()
 DEVICE = os.getenv('DEVICE_ID'),
 ACCOUNT= os.getenv('ACCOUNT_ID'),
-SECRET = os.getenv('ACCOUNT_SECRET')
+SECRET = os.getenv('CLIENT_SECRET')
 
 async def get_token():
     url = 'https://account-public-service-prod.ol.epicgames.com/account/api/oauth/token'
@@ -22,11 +22,13 @@ async def get_token():
     }
     res = requests.post(url, headers=headers, data=data)
     res = res.json()
-    print(res)
     return res['access_token']
 
+async def name_to_id(name):
+    return
+
 async def get_rank(name):
-    url = f'https://fn-service-habanero-live-public.ogs.live.on.epicgames.com/api/v1/games/fortnite/trackprogress/{ACCOUNT}'
+    url = f'https://fn-service-habanero-live-public.ogs.live.on.epicgames.com/api/v1/games/fortnite/trackprogress/{os.getenv('ACCOUNT_ID')}'
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
         "Authorization": f"Bearer {await get_token()}"
@@ -40,48 +42,27 @@ async def get_rank(name):
         print(r)
         div_id = r['currentDivision']
         div_number = str(100*r['promotionProgress'])+"%"
-        match div_id:
-            case 0:
-                div_name = "Bronze 1"
-            case 1:
-                div_name = "Bronze 2"
-            case 2:
-                div_name = "Bronze 3"
-            case 3:
-                div_name = "Silver 1"
-            case 4:
-                div_name = "Silver 2"
-            case 5:
-                div_name = "Silver 3"
-            case 6:
-                div_name = "Gold 1"
-            case 7:
-                div_name = "Gold 2"
-            case 8:
-                div_name = "Gold 3"
-            case 9:
-                div_name = "Platinum 1"
-            case 10:
-                div_name = "Platinum 2"
-            case 11:
-                div_name = "Platinum 3"
-            case 12:
-                div_name = "Diamond 1"
-            case 13:
-                div_name = "Diamond 2"
-            case 14:
-                div_name = "Diamond 3"
-            case 15:
-                div_name = "Elite"
-            case 16:
-                div_name = "Champion"
-            case 17:
-                div_name = "Unreal"
-                div_number = f'#{r['currentPlayerRanking']}'
-            case _:
-                div_name = "Unranked"
-                div_number = ""
-
+        divisions = {0: 'Bronze I',
+                        1: 'Bronze II',
+                        2: 'Bronze III',
+                        3: 'Silver I',
+                        4: 'Silver II',
+                        5: 'Silver III',
+                        6: 'Gold I',
+                        7: 'Gold II',
+                        8: 'Gold III',
+                        9: 'Platinum I',
+                        10:'Platinum II',
+                        11:'Platinum III',
+                        12:'Diamond I',
+                        13:'Diamond II',
+                        14:'Diamond III',
+                        15:'Elite',
+                        16:'Champion',
+                        17: 'Unreal'}
+        div_name = divisions[div_id]
+        if div_id == 17:
+            div_number = f'#{r['currentPlayerRanking']}'
         return f"{name}'s rank is: {div_name} {div_number}"
 
     return "Something went wrong"
