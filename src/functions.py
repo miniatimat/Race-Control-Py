@@ -43,36 +43,36 @@ async def get_token():
     global TOKEN
     TOKEN = res['access_token']
 
-async def get_external_auth(name,token):
+async def get_external_auth(name):
     auth_types = ['steam', 'psn', 'xbl', 'nintendo']
     for t in auth_types:
         url = f'https://account-public-service-prod.ol.epicgames.com/account/api/public/account/lookup/externalAuth/{t}/displayName/{name}'
         headers = {
-            "Authorization": f"Bearer {token}"
+            "Authorization": f"Bearer {TOKEN}"
         }
         res = requests.get(url, headers=headers)
         res = res.json()
         if len(res) > 0:
             return res[0]
     return -1
-async def name_to_id(name, token):
+async def name_to_id(name):
     url = f'https://account-public-service-prod.ol.epicgames.com/account/api/public/account/displayName/{name}'
     headers = {
-        "Authorization": f"Bearer {token}"
+        "Authorization": f"Bearer {TOKEN}"
     }
 
     res = requests.get(url, headers=headers)
     res = res.json()
     print(res)
     if 'errorCode' in res:
-        res = await get_external_auth(name, token)
+        res = await get_external_auth(name)
     if res == -1:
         return -1
     return res['id']
 
 async def get_rank(name):
     await get_token()
-    account_id = await name_to_id(name, TOKEN)
+    account_id = await name_to_id(name)
     if account_id == -1:
         return "Couldn't find that name"
     url = f'https://fn-service-habanero-live-public.ogs.live.on.epicgames.com/api/v1/games/fortnite/trackprogress/{account_id}'
