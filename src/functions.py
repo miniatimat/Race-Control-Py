@@ -4,10 +4,28 @@ import requests
 
 load_dotenv()
 DEVICE = os.getenv('DEVICE_ID'),
-ACCOUNT= os.getenv('ACCOUNT_ID'),
+ACCOUNT = os.getenv('ACCOUNT_ID'),
 SECRET = os.getenv('CLIENT_SECRET')
 
+global TOKEN
+TOKEN = ""
+async def validate_token():
+    url = "https://account-public-service-prod.ol.epicgames.com/account/api/oauth/verify"
+    headers = {
+        "Authorization": f"Bearer {TOKEN}"
+    }
+    res = requests.get(url, headers=headers)
+    res = res.json()
+    if "errorCode" in res:
+        print("Token is NOT valid")
+        return False
+    print("Token is valid")
+    return True
+
 async def get_token():
+    print("Validating token")
+    if await validate_token():
+        return
     url = 'https://account-public-service-prod.ol.epicgames.com/account/api/oauth/token'
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -22,14 +40,14 @@ async def get_token():
     }
     res = requests.post(url, headers=headers, data=data)
     res = res.json()
-    return res['access_token']
+    global TOKEN
+    TOKEN = res['access_token']
 
 async def get_external_auth(name,token):
     auth_types = ['steam', 'psn', 'xbl', 'nintendo']
-    for type in auth_types:
-        url = f'https://account-public-service-prod.ol.epicgames.com/account/api/public/account/lookup/externalAuth/{type}/displayName/{name}'
+    for t in auth_types:
+        url = f'https://account-public-service-prod.ol.epicgames.com/account/api/public/account/lookup/externalAuth/{t}/displayName/{name}'
         headers = {
-            "Content-Type": "application/x-www-form-urlencoded",
             "Authorization": f"Bearer {token}"
         }
         res = requests.get(url, headers=headers)
@@ -40,7 +58,6 @@ async def get_external_auth(name,token):
 async def name_to_id(name, token):
     url = f'https://account-public-service-prod.ol.epicgames.com/account/api/public/account/displayName/{name}'
     headers = {
-        "Content-Type": "application/x-www-form-urlencoded",
         "Authorization": f"Bearer {token}"
     }
 
@@ -54,14 +71,13 @@ async def name_to_id(name, token):
     return res['id']
 
 async def get_rank(name):
-    token = await get_token()
-    account_id = await name_to_id(name, token)
+    await get_token()
+    account_id = await name_to_id(name, TOKEN)
     if account_id == -1:
         return "Couldn't find that name"
     url = f'https://fn-service-habanero-live-public.ogs.live.on.epicgames.com/api/v1/games/fortnite/trackprogress/{account_id}'
     headers = {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": f"Bearer {token}"
+        "Authorization": f"Bearer {TOKEN}"
     }
 
     res = requests.get(url, headers=headers)
