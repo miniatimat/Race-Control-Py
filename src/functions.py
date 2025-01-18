@@ -9,6 +9,7 @@ SECRET = os.getenv('CLIENT_SECRET')
 
 global TOKEN
 TOKEN = ""
+
 async def validate_token():
     url = "https://account-public-service-prod.ol.epicgames.com/account/api/oauth/verify"
     headers = {
@@ -56,6 +57,7 @@ async def get_external_auth(name):
             return res[0]
     return -1
 async def name_to_id(name):
+    await get_token()
     url = f'https://account-public-service-prod.ol.epicgames.com/account/api/public/account/displayName/{name}'
     headers = {
         "Authorization": f"Bearer {TOKEN}"
@@ -70,21 +72,19 @@ async def name_to_id(name):
         return -1
     return res['id']
 
-async def get_rank(name):
+async def get_rank(name,season):
     await get_token()
     account_id = await name_to_id(name)
     if account_id == -1:
         return "Couldn't find that name"
-    url = f'https://fn-service-habanero-live-public.ogs.live.on.epicgames.com/api/v1/games/fortnite/trackprogress/{account_id}'
-    headers = {
-        "Authorization": f"Bearer {TOKEN}"
-    }
+    try:
+        url = f'https://fn-service-habanero-live-public.ogs.live.on.epicgames.com/api/v1/games/fortnite/trackprogress/{account_id}/byTrack/{season}'
+        headers = {
+            "Authorization": f"Bearer {TOKEN}"
+        }
 
-    res = requests.get(url, headers=headers)
-    res = res.json()
-    for r in res:
-        if r["rankingType"] != "delmar-competitive":
-            continue
+        res = requests.get(url, headers=headers)
+        r = res.json()
         print(r)
         div_id = r['currentDivision']
         div_number = str(100*r['promotionProgress'])+"%"
@@ -112,5 +112,5 @@ async def get_rank(name):
         response = f"{name}'s rank is: {div_name} {div_number}"
         print(response)
         return response
-
-    return "Something went wrong"
+    except:
+        return "Something went wrong"
